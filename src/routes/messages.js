@@ -5,7 +5,6 @@ const { sendMessageToStream } = require("../messaging/producer");
 const messageService = require("../services/messageService");
 const userService = require("../services/userService");
 
-// GET /messages → DB'deki tüm mesajlar
 router.get("/", async (req, res) => {
   try {
     const msgs = await messageService.getAllMessages();
@@ -16,7 +15,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST /messages → Redis Stream'e mesaj gönder
 router.post("/", async (req, res) => {
   try {
     const { userId, content } = req.body;
@@ -30,24 +28,33 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "userId sayısal olmalıdır" });
     }
 
-    // User exist check
     const user = await userService.getUserById(userId);
     if (!user) {
-      return res.status(404).json({ error: "Gönderilen userId için kullanıcı bulunamadı" });
+      return res
+        .status(404)
+        .json({ error: "Gönderilen userId için kullanıcı bulunamadı" });
     }
 
-    // Redis'e gönder
-    const streamId = await sendMessageToStream(userId, content);
+   
+    const savedMessage = await messageService.createMessage(userId, content);
 
-    return res.status(202).json({
-      status: "queued",
+    let streamId = null;
+    try {
+      streamId = await sendMessageToStream(userId, content);
+      console.log("Message added to Redis stream:", streamId);
+    } catch (redisErr) {
+      console.error("Redis publish error:", redisErr);
+      
+    }
+
+    return res.status(201).json({
+      status: "ok",
+      data: savedMessage,
       streamId,
-      message: "Mesaj kuyruğa alındı. Consumer tarafından işlenecek."
     });
-
   } catch (err) {
     console.error("POST /messages error:", err);
-    return res.status(500).json({ error: "Mesaj Redis'e yazılamadı" });
+    return res.status(500).json({ error: "Mesaj kaydedilemedi" });
   }
 });
 

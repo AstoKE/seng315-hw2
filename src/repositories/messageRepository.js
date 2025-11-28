@@ -1,17 +1,20 @@
-const { Message } = require("../models");
+// src/repositories/messageRepository.js
+const Message = require("../models/Message");
 
-class MessageRepository {
-  async createMessage({ userId, content }) {
-    return Message.create({ userId, content });
-  }
-
-  async getMessagesByUser(userId) {
-    return Message.findAll({ where: { userId } });
-  }
-
-  async getAllMessages() {
-    return Message.findAll();
-  }
+async function getAllMessages() {
+  return Message.findAll({
+    order: [["createdAt", "ASC"]],
+  });
 }
 
-module.exports = new MessageRepository();
+async function createMessage(userId, content) {
+  return Message.create({
+    userId: userId,   
+    content: content, 
+  });
+}
+
+module.exports = {
+  getAllMessages,
+  createMessage,
+};

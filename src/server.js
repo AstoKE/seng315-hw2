@@ -2,13 +2,14 @@ require("dotenv").config();
 const express = require("express");
 const { sequelize } = require("./models");
 const path = require("path");
+const authRoutes = require("./routes/auth");
 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-
+app.use("/auth", authRoutes);
 // statik dosyalar 
 app.use(express.static(path.join(__dirname, "../public")));
 

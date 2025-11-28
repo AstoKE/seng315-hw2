@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chat Admin Panel (Debug)</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 1rem 2rem;
+        background: #111827;
+        color: #e5e7eb;
+      }
+      h1 {
+        margin-bottom: 0.5rem;
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .card {
+        background: #1f2937;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      }
+      .card h2 {
+        margin-top: 0;
+        font-size: 1.1rem;
+      }
+      button {
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        background: #3b82f6;
+        color: white;
+        font-weight: 500;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      input {
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #4b5563;
+        background: #111827;
+        color: #e5e7eb;
+      }
+      pre {
+        background: #020617;
+        color: #e5e7eb;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        max-height: 300px;
+        overflow: auto;
+        font-size: 0.8rem;
+      }
+      label {
+        font-size: 0.85rem;
+      }
+      .row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat Admin / Debug Panel</h1>
+    <p style="color:#9ca3af;">
+      Bu ekran sadece geliştirme için. Users & Messages endpointlerini hızlıca
+      test etmek için kullanıyoruz.
+    </p>
+
+    <div class="container">
+      <!-- USERS -->
+      <div class="card">
+        <h2>Users</h2>
+
+        <div class="row">
+          <label for="username">Yeni kullanıcı adı:</label>
+          <input id="username" type="text" placeholder="Username" />
+          <button id="btnCreateUser">Create User</button>
+        </div>
+
+        <div class="row">
+          <button id="btnLoadUsers">Load Users</button>
+        </div>
+
+        <pre id="usersOutput">Henüz veri yok.</pre>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="card">
+        <h2>Messages</h2>
+
+        <div class="row">
+          <label for="msgUserId">User ID:</label>
+          <input id="msgUserId" type="number" min="1" placeholder="ör: 1" />
+        </div>
+        <div class="row">
+          <label for="msgContent">Content:</label>
+          <input
+            id="msgContent"
+            type="text"
+            placeholder="ör: Merhaba bu bir test mesajıdır"
+            size="35"
+          />
+        </div>
+        <div class="row">
+          <button id="btnCreateMessage">Create Message</button>
+          <button id="btnLoadMessages">Load Messages</button>
+        </div>
+
+        <pre id="messagesOutput">Henüz veri yok.</pre>
+      </div>
+    </div>
+
+    <script>
+      const usersOutput = document.getElementById("usersOutput");
+      const messagesOutput = document.getElementById("messagesOutput");
+
+      // Helper: JSON'u güzel yaz
+      function pretty(obj) {
+        return JSON.stringify(obj, null, 2);
+      }
+
+      // USERS
+      document
+        .getElementById("btnLoadUsers")
+        .addEventListener("click", async () => {
+          try {
+            const res = await fetch("/users"); // API arkadaşın burayı /api/users yaparsa ona göre değiştir
+            const data = await res.json();
+            usersOutput.textContent = pretty(data);
+          } catch (err) {
+            usersOutput.textContent = "Hata: " + err.message;
+          }
+        });
+
+      document
+        .getElementById("btnCreateUser")
+        .addEventListener("click", async () => {
+          const username = document.getElementById("username").value.trim();
+          if (!username) {
+            alert("Lütfen username gir.");
+            return;
+          }
+          try {
+            const res = await fetch("/users", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username }),
+            });
+            const data = await res.json();
+            usersOutput.textContent = "Created:\n" + pretty(data);
+          } catch (err) {
+            usersOutput.textContent = "Hata: " + err.message;
+          }
+        });
+
+      // MESSAGES
+      document
+        .getElementById("btnLoadMessages")
+        .addEventListener("click", async () => {
+          try {
+            const res = await fetch("/messages");
+            const data = await res.json();
+            messagesOutput.textContent = pretty(data);
+          } catch (err) {
+            messagesOutput.textContent = "Hata: " + err.message;
+          }
+        });
+
+      document
+        .getElementById("btnCreateMessage")
+        .addEventListener("click", async () => {
+          const userId = Number(
+            document.getElementById("msgUserId").value.trim()
+          );
+          const content = document
+            .getElementById("msgContent")
+            .value.trim();
+
+          if (!userId || !content) {
+            alert("UserId ve content zorunlu.");
+            return;
+          }
+
+          try {
+            const res = await fetch("/messages", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId, content }),
+            });
+            const data = await res.json();
+            messagesOutput.textContent = "Created:\n" + pretty(data);
+          } catch (err) {
+            messagesOutput.textContent = "Hata: " + err.message;
+          }
+        });
+    </script>
+  </body>
+</html>

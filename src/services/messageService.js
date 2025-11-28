@@ -1,20 +1,16 @@
+// src/services/messageService.js
 const messageRepository = require("../repositories/messageRepository");
 
-class MessageService {
-  createMessage(data) {
-    return messageRepository.createMessage({
-      userId: data.userId,
-      content: data.content,
-    });
-  }
-
-  getMessagesByUser(userId) {
-    return messageRepository.getMessagesByUser(userId);
-  }
-
-  getAllMessages() {
-    return messageRepository.getAllMessages();
-  }
+async function getAllMessages() {
+  return messageRepository.getAllMessages();
 }
 
-module.exports = new MessageService();
+// BURASI DA AYNI İMZAYI KULLANIYOR: (userId, content)
+async function createMessage(userId, content) {
+  return messageRepository.createMessage(userId, content);
+}
+
+module.exports = {
+  getAllMessages,
+  createMessage,
+};
