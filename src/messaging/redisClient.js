@@ -1,11 +1,15 @@
+// src/messaging/redisClient.js
 const { createClient } = require("redis");
 require("dotenv").config();
 
 const redisUrl = process.env.REDIS_URL;
 
+if (!redisUrl) {
+  console.warn("⚠️ REDIS_URL is not set. Redis will not be used.");
+}
+
 const redisClient = createClient({
   url: redisUrl,
-  
 });
 
 redisClient.on("error", (err) => {
@@ -18,7 +22,9 @@ redisClient.on("connect", () => {
 
 (async () => {
   try {
-    await redisClient.connect();
+    if (redisUrl) {
+      await redisClient.connect();
+    }
   } catch (err) {
     console.error("Redis initial connect failed:", err);
   }
